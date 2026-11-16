@@ -1,6 +1,6 @@
 ========================================================================
 GUIDE D'INSTALLATION ET DE LANCEMENT EN LOCAL
-Projet : ATSMatcher Pro (Analyseur de CV & Offres d'Emploi)
+Projet : CLAVERATS Pro (Analyseur de CV & Offres d'Emploi)
 Auteur : Glodi-Placide Oleko Diomba
 ========================================================================
 

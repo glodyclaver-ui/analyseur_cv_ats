@@ -1,4 +1,4 @@
-# ATSMatcher Pro — Suite SaaS d'Audit Sémantique CV & Offres d'Emploi
+# CLAVERATS Pro — Suite SaaS d'Audit Sémantique CV & Offres d'Emploi
 
 Application web Full-Stack développée avec **Python (Flask)**, **pypdf**, **BeautifulSoup4** et **ReportLab**. Conçue avec une interface moderne multi-onglets (Mode Clair & Mode Sombre), elle analyse la compatibilité entre un CV et une offre d'emploi tout en évaluant la réalité terrain (éligibilité géographique, fiabilité de l'adresse e-mail recruteur, délais et cohérence rédactionnelle), le tout **100 % en local (zéro stockage externe)**.
 
