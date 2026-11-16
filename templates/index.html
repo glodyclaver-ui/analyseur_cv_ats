@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Glody-Claver" />
+    <title>CLAVERATS | Audit CV & Espace RH</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='libs/ionicons/css/ionicons.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <div class="app-shell">
+        <aside class="left-sidebar">
+            <div class="sidebar-logo" title="CLAVERATS">
+                <i class="ion-pie-graph"></i>
+            </div>
+
+            <nav class="sidebar-nav">
+                <button type="button" class="side-btn active" data-tab="tab-scan" onclick="switchTab('tab-scan')" title="Espace Candidat">
+                    <i class="ion-person"></i>
+                </button>
+                <button type="button" class="side-btn disabled" data-tab="tab-overview" onclick="switchTab('tab-overview')" title="Vue d'ensemble">
+                    <i class="ion-grid"></i>
+                </button>
+                <button type="button" class="side-btn disabled" data-tab="tab-profile" onclick="switchTab('tab-profile')" title="Profil & Corriger">
+                    <i class="ion-edit"></i>
+                </button>
+                <button type="button" class="side-btn disabled" data-tab="tab-interview" onclick="switchTab('tab-interview')" title="Questions Entretien & Éléments Offre">
+                    <i class="ion-chatbubbles"></i>
+                </button>
+                <button type="button" class="side-btn disabled" data-tab="tab-apply" onclick="switchTab('tab-apply')" title="Calendrier & Employeur">
+                    <i class="ion-calendar"></i>
+                </button>
+                <button type="button" class="side-btn hr-accent" data-tab="tab-hr" onclick="switchTab('tab-hr')" title="Mode Équipe RH">
+                    <i class="ion-speakerphone"></i>
+                </button>
+            </nav>
+
+            <div class="sidebar-bottom">
+                <button type="button" class="side-btn" onclick="toggleTheme()" title="Mode Clair / Sombre">
+                    <i class="ion-contrast"></i>
+                </button>
+            </div>
+        </aside>
+
+        <div class="main-area">
+            <header class="top-header">
+                <div class="header-left">
+                    <div class="avatar-pill" id="nav_initials" onclick="switchTab('tab-scan')">
+                        <i class="ion-person"></i>
+                    </div>
+                    <div class="welcome-text">
+                        <span class="sub-greet" id="nav_location">Bonjour,</span>
+                        <strong id="nav_username">Candidat CLAVERATS</strong>
+                    </div>
+                </div>
+
+                <div class="header-right">
+                    <button type="button" class="pill-btn-primary" id="mode_switch_btn" onclick="toggleWorkspaceMode()">
+                        <i class="ion-speakerphone"></i> <span>Mode Équipe RH</span>
+                    </button>
+                    <button type="button" class="bell-circle" onclick="toggleTheme()" title="Changer le thème">
+                        <i class="ion-contrast"></i>
+                    </button>
+                </div>
+            </header>
+
+                        <main class="bento-container">
+                <div class="page-hero">
+                    <div>
+                        <h1 id="greeting_title">Organisez votre <span class="underline-blue">candidature</span></h1>
+                        <p id="greeting_sub">Comparez votre CV et l'offre d'emploi 100 % en local sur CLAVERATS.</p>
+                    </div>
+                    <span class="date-pill"><i class="ion-calendar"></i> <span id="current_date_chip">--/--/2026</span></span>
+                </div>
+
+                <div id="alert_box" class="alert-error"></div>
+
+                <!-- ONGLET 1 : SCAN CANDIDAT -->
+                <section id="tab-scan" class="tab-pane active">
+                    <form id="ats-form" class="bento-grid-2" onsubmit="event.preventDefault(); runMatching();">
+                        <div class="bento-card">
+                            <div class="card-top-row">
+                                <span class="chip-blue">01 • VOTRE CV</span>
+                                <span class="muted-small">PDF ou Texte</span>
+                            </div>
+                            <h2 class="card-title">Document du Candidat</h2>
+                            <label class="drop-zone" for="cv_pdf">
+                                <div class="drop-circle"><i class="ion-ios-cloud-upload-outline"></i></div>
+                                <strong id="cv-file-label">Importer votre CV (.PDF)</strong>
+                                <span>Extraction automatique du nom, profession et compétences</span>
+                                <input type="file" id="cv_pdf" accept=".pdf" onchange="handleFileSelect(this, 'cv-file-label', 'Importer votre CV (.PDF)')">
+                            </label>
+                            <div class="soft-divider"><span>OU COLLEZ LE TEXTE DU CV</span></div>
+                            <textarea id="cv_text" rows="5" placeholder="Collez ici le texte complet de votre CV..."></textarea>
+                        </div>
+
+                        <div class="bento-card">
+                            <div class="card-top-row">
+                                <span class="chip-amber">02 • L'OFFRE</span>
+                                <span class="muted-small">PDF, URL ou Texte</span>
+                            </div>
+                            <h2 class="card-title">Annonce d'Emploi Ciblée</h2>
+                            <label class="drop-zone compact" for="job_pdf">
+                                <i class="ion-document"></i>
+                                <strong id="job-file-label">Importer l'offre en PDF (Optionnel)</strong>
+                                <input type="file" id="job_pdf" accept=".pdf" onchange="handleFileSelect(this, 'job-file-label', 'Importer l\'offre en PDF (Optionnel)')">
+                            </label>
+                            <div class="input-icon-box">
+                                <i class="ion-link"></i>
+                                <input type="text" id="job_url" placeholder="Ou collez le lien URL de l'offre (https://...)">
+                            </div>
+                            <div class="soft-divider"><span>OU COLLEZ LE TEXTE DE L'OFFRE</span></div>
+                            <textarea id="job_text" rows="4" placeholder="Collez la description du poste, le lieu et la date limite..."></textarea>
+                        </div>
+
+                        <div class="form-actions-row">
+                            <button type="submit" class="btn-royal" id="btn-analyze">
+                                <i class="ion-analytics"></i> Lancer l'audit intelligent
+                            </button>
+                            <button type="button" class="btn-soft-reset" onclick="resetForm()">
+                                <i class="ion-refresh"></i> Réinitialiser
+                            </button>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- ONGLET 2 : VUE D'ENSEMBLE CANDIDAT -->
+                <section id="tab-overview" class="tab-pane hidden">
+                    <div class="bento-grid-2" style="margin-bottom: 18px;">
+                        <div id="geo_banner" class="status-banner ok"></div>
+                        <div id="email_trust_banner" class="status-banner ok"></div>
+                    </div>
+
+                    <div class="bento-kpi-3">
+                        <div class="bento-card">
+                            <div class="card-top-row">
+                                <span class="kpi-label">Score Global ATS</span>
+                                <button type="button" class="chip-blue" style="border:none; cursor:pointer;" onclick="exportPDF()">Bilan PDF</button>
+                            </div>
+                            <div class="kpi-number" id="ov_score">0%</div>
+                            <div class="kpi-bottom-row">
+                                <span class="trend-mint" id="ov_projected_hint">Potentiel : 0%</span>
+                                <svg class="sparkline-svg" viewBox="0 0 100 32">
+                                    <path d="M2,24 Q18,8 32,20 T62,12 T98,6" fill="none" stroke="#4A72FF" stroke-width="2.5" stroke-linecap="round"/>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div class="bento-card pastel-cream">
+                            <div class="card-top-row">
+                                <span class="kpi-label">Compétences Validées</span>
+                                <span class="kpi-period">Mots-clés</span>
+                            </div>
+                            <div class="kpi-number" id="ov_skills">0 / 0</div>
+                            <div class="kpi-bottom-row">
+                                <span class="trend-amber" id="ov_missing_count">0 manquant</span>
+                                <div class="mini-donut"></div>
+                            </div>
+                        </div>
+
+                        <div class="bento-card pastel-ice">
+                            <div class="card-top-row">
+                                <span class="kpi-label">Expérience (2026-11)</span>
+                                <span class="kpi-period">Fusionnée</span>
+                            </div>
+                            <div class="kpi-number" id="ov_exp">0 an(s)</div>
+                            <div class="tri-bar" style="margin-bottom:6px;">
+                                <span class="seg-blue"></span>
+                                <span class="seg-amber"></span>
+                                <span class="seg-mint"></span>
+                            </div>
+                            <span class="muted-small" id="ov_exp_req">0 an(s) requis</span>
+                        </div>
+                    </div>
+
+                    <div class="bento-grid-2">
+                        <div class="bento-card">
+                            <div class="card-top-row">
+                                <h3 class="card-title">Compétences Validées</h3>
+                                <span class="chip-mint" id="ov_langs">Langues</span>
+                            </div>
+                            <div class="tags-wrap" id="matched_tags" style="margin-bottom:16px;"></div>
+                            <div id="category_bars" class="cat-bars"></div>
+                        </div>
+
+                        <div class="bento-card pastel-cream">
+                            <div class="card-top-row">
+                                <h3 class="card-title">À ajouter (Cliquez pour simuler)</h3>
+                                <span class="chip-amber">Simulateur</span>
+                            </div>
+                            <div class="tags-wrap" id="missing_tags" style="margin-bottom:16px;"></div>
+                            <ul class="info-list" id="gap_summary_list"></ul>
+                        </div>
+                    </div>
+                </section>
+
+                                <!-- ONGLET 3 : PROFIL & CORRIGER -->
+                <section id="tab-profile" class="tab-pane hidden">
+                    <div class="bento-grid-2">
+                        <div class="bento-card">
+                            <h3 class="card-title" style="margin-bottom:14px;">Vérifier & Corriger les données</h3>
+                            <div class="edit-grid">
+                                <div class="field-box">
+                                    <label>Nom complet</label>
+                                    <input type="text" id="edit_name" oninput="verifyFieldAgainstCV('edit_name', 'verif_name')">
+                                    <small class="verif-badge" id="verif_name"></small>
+                                </div>
+                                <div class="field-box">
+                                    <label>Votre Ville (CV)</label>
+                                    <input type="text" id="edit_cand_loc" oninput="verifyFieldAgainstCV('edit_cand_loc', 'verif_cand_loc')">
+                                    <small class="verif-badge" id="verif_cand_loc"></small>
+                                </div>
+                                <div class="field-box"><label>Ville de l'offre</label><input type="text" id="edit_job_loc"></div>
+                                <div class="field-box"><label>Vos années d'expérience</label><input type="number" id="edit_cand_exp" step="0.5"></div>
+                                <div class="field-box"><label>Expérience exigée</label><input type="number" id="edit_req_exp" step="0.5"></div>
+                                <div class="field-box"><label>Langues parlées</label><input type="text" id="edit_cand_langs"></div>
+                            </div>
+                            <button type="button" class="btn-royal" style="margin-top:16px;" onclick="recalculateReport()">
+                                <i class="ion-checkmark"></i> Valider & Recalculer
+                            </button>
+                        </div>
+
+                        <div class="bento-card pastel-ice">
+                            <h3 class="card-title" style="margin-bottom:14px;">Synthèse de votre profil détecté</h3>
+                            <ul class="info-list" id="profile_summary_list"></ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ONGLET 4 : QUESTIONS ENTRETIEN (CV) + ÉLÉMENTS DE L'OFFRE CÔTE À CÔTE -->
+                <section id="tab-interview" class="tab-pane hidden">
+                    <div class="bento-grid-2">
+                        <div class="bento-card">
+                            <div class="card-top-row">
+                                <h3 class="card-title">Questions probables en entretien</h3>
+                                <span class="chip-blue">Basées sur votre CV</span>
+                            </div>
+                            <ul class="info-list" id="interview_questions_list"></ul>
+                        </div>
+
+                        <div class="bento-card pastel-cream">
+                            <div class="card-top-row">
+                                <h3 class="card-title">Éléments clés de l'offre & Organisation</h3>
+                                <span class="chip-amber">Offre ciblée</span>
+                            </div>
+                            <ul class="info-list" id="offer_elements_list"></ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ONGLET 5 : CALENDRIER & DÉTAILS EMPLOYEUR -->
+                <section id="tab-apply" class="tab-pane hidden">
+                    <div class="bento-grid-2" style="margin-bottom:18px;">
+                        <div class="bento-card">
+                            <div class="card-top-row">
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <button type="button" class="cal-nav-btn" onclick="changeCalendarMonth(-1)"><i class="ion-chevron-left"></i></button>
+                                    <h3 class="card-title" id="cal_month_title">Mois Année</h3>
+                                    <button type="button" class="cal-nav-btn" onclick="changeCalendarMonth(1)"><i class="ion-chevron-right"></i></button>
+                                </div>
+                                <span class="chip-mint" id="cal_days_badge">-- jours</span>
+                            </div>
+                            <div class="calendar-weekdays">
+                                <span>Lun</span><span>Mar</span><span>Mer</span><span>Jeu</span><span>Ven</span><span>Sam</span><span>Dim</span>
+                            </div>
+                            <div class="calendar-grid" id="apply_calendar_grid"></div>
+                            <div class="cal-agenda-bar">
+                                <span class="muted-small" id="selected_date_label">Date choisie : Aujourd'hui</span>
+                                <button type="button" class="pill-btn-primary" style="padding:7px 14px; font-size:0.78rem;" onclick="downloadCalendarICS()">
+                                    <i class="ion-android-calendar"></i> Agenda (.ICS)
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="bento-card">
+                            <div class="card-top-row">
+                                <h3 class="card-title">Détails Employeur</h3>
+                                <span class="chip-blue" id="emp_status_pill">En cours</span>
+                            </div>
+                            <div class="meta-rows">
+                                <div class="meta-row"><span class="meta-key">Organisation</span><span class="meta-val" id="emp_company">—</span></div>
+                                <div class="meta-row"><span class="meta-key">Contact RH</span><span class="meta-val" id="emp_email">—</span></div>
+                                <div class="meta-row"><span class="meta-key">Où postuler</span><span class="meta-val" id="emp_apply_link">—</span></div>
+                                <div class="meta-row"><span class="meta-key">Clôture</span><span class="meta-val" id="emp_deadline">—</span></div>
+                                <div class="meta-row"><span class="meta-key">Étiquettes</span><div class="meta-tags" id="emp_labels"></div></div>
+                            </div>
+
+                            <div style="margin-top:14px;">
+                                <div class="card-top-row" style="margin-bottom:8px;">
+                                    <strong style="font-size:0.85rem;">Checklist avant envoi</strong>
+                                    <span class="muted-small" id="checklist_counter">0/4</span>
+                                </div>
+                                <div class="checklist-box" id="apply_checklist">
+                                    <label><input type="checkbox" onchange="updateChecklistCount()"> <span id="chk_cv_filename">CV renommé au nom du candidat (CV_Prenom_Nom.pdf)</span></label>
+                                    <label><input type="checkbox" onchange="updateChecklistCount()"> <span>Mots-clés manquants ajoutés</span></label>
+                                    <label><input type="checkbox" onchange="updateChecklistCount()"> <span>Date limite & lieu vérifiés</span></label>
+                                    <label><input type="checkbox" onchange="updateChecklistCount()"> <span>Adresse e-mail RH vérifiée</span></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bento-card">
+                        <div class="card-top-row">
+                            <h3 class="card-title">Message / Lettre de motivation</h3>
+                            <div style="display:flex; gap:8px;">
+                                <button type="button" class="pill-btn-ghost" onclick="exportCoverLetterPDF()">Lettre PDF</button>
+                                <button type="button" class="pill-btn-ghost" onclick="copyPitch()"><span id="copy-pitch-text">Copier</span></button>
+                            </div>
+                        </div>
+                        <textarea id="cover_pitch_box" rows="6"></textarea>
+                    </div>
+                </section>
+
+                                <!-- ONGLET 6 : MODE ÉQUIPE RH -->
+                <section id="tab-hr" class="tab-pane hidden">
+                    <form id="hr-form" class="bento-grid-2" onsubmit="event.preventDefault(); runHrBatch();">
+                        <div class="bento-card">
+                            <div class="card-top-row">
+                                <span class="chip-blue"><i class="ion-speakerphone"></i> ESPACE ÉQUIPE RH</span>
+                                <span class="muted-small">100 % Local</span>
+                            </div>
+                            <h2 class="card-title">Importer le dossier de CV (.PDF)</h2>
+                            <label class="drop-zone" for="hr_cv_files">
+                                <div class="drop-circle"><i class="ion-ios-folder-outline"></i></div>
+                                <strong id="hr-files-label">Sélectionner plusieurs fichiers CV (.PDF)</strong>
+                                <span>Maintenez Ctrl pour importer plusieurs CV</span>
+                                <input type="file" id="hr_cv_files" accept=".pdf" multiple onchange="handleMultiFiles(this)">
+                            </label>
+                            <div class="edit-grid" style="margin-top:14px;">
+                                <div class="field-box">
+                                    <label>Nombre de personnes à recruter (Quota voulu)</label>
+                                    <input type="number" id="hr_positions_count" value="3" min="1" max="500" oninput="updateTopNButtonLabel()">
+                                </div>
+                                <div class="field-box">
+                                    <label>Priorité Compétences (%)</label>
+                                    <input type="number" id="hr_tech_weight" value="60" min="30" max="80" step="5">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bento-card">
+                            <div class="card-top-row">
+                                <span class="chip-amber">CRITÈRES DU POSTE</span>
+                                <span class="muted-small">Référentiel RH</span>
+                            </div>
+                            <h2 class="card-title">Description de l'offre à pourvoir</h2>
+                            <textarea id="hr_job_text" rows="9" placeholder="Collez ici les compétences, diplômes, langues et expérience exigés..."></textarea>
+                        </div>
+
+                        <div class="form-actions-row">
+                            <button type="submit" class="btn-royal" id="btn-hr-analyze">
+                                <i class="ion-speakerphone"></i> Analyser et classer tous les CV reçus
+                            </button>
+                            <button type="button" class="btn-soft-reset" onclick="resetHrDashboard()">
+                                <i class="ion-refresh"></i> Restaurer
+                            </button>
+                        </div>
+                    </form>
+
+                    <div id="hr_results_area" class="hidden" style="margin-top:24px;">
+                        <div class="bento-kpi-3" style="margin-bottom:18px;">
+                            <div class="bento-card">
+                                <div class="card-top-row">
+                                    <span class="kpi-label">Total CV Analysés</span>
+                                    <span class="chip-blue" id="hr_wanted_chip">Voulu : 3</span>
+                                </div>
+                                <div class="kpi-number" id="hr_total_cv">0</div>
+                                <div class="kpi-bottom-row">
+                                    <span class="trend-mint" id="hr_quota_label">Moyenne : 0%</span>
+                                    <svg class="sparkline-svg" viewBox="0 0 100 32">
+                                        <path d="M2,26 Q25,20 50,16 T98,8" fill="none" stroke="#4A72FF" stroke-width="2.5" stroke-linecap="round"/>
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <div class="bento-card pastel-cream">
+                                <div class="card-top-row">
+                                    <span class="kpi-label">Top Profils (≥ 70%)</span>
+                                    <span class="kpi-period">Performants</span>
+                                </div>
+                                <div class="kpi-number" id="hr_top_count">0</div>
+                                <div class="kpi-bottom-row">
+                                    <span class="trend-amber" id="hr_top_pct_label">0% de la cohorte</span>
+                                    <div class="mini-donut"></div>
+                                </div>
+                            </div>
+
+                            <div class="bento-card pastel-ice">
+                                <div class="card-top-row">
+                                    <span class="kpi-label">Moyens & Écartés</span>
+                                    <span class="kpi-period">Répartition</span>
+                                </div>
+                                <div class="kpi-number" id="hr_mid_low_count">0 / 0</div>
+                                <div class="tri-bar" style="margin-bottom:6px;">
+                                    <span class="seg-blue" id="hr_seg_top" style="width:33%;"></span>
+                                    <span class="seg-amber" id="hr_seg_mid" style="width:33%;"></span>
+                                    <span class="seg-mint" id="hr_seg_low" style="width:34%;"></span>
+                                </div>
+                                <span class="muted-small">Top / Moyens / Écartés</span>
+                            </div>
+                        </div>
+
+                        <!-- CHART QUOTA : NOMBRE DE CV REÇUS VS TOTAL VOULU -->
+                        <div class="bento-card" style="margin-bottom:18px;">
+                            <div class="card-top-row">
+                                <div>
+                                    <h3 class="card-title">Chart Quota Recrutement (CV Reçus vs Total Voulu)</h3>
+                                    <span class="muted-small" id="hr_quota_chart_desc">Comparaison entre le volume reçu et le besoin de recrutement</span>
+                                </div>
+                                <span class="chip-mint" id="hr_quota_status_badge">En attente</span>
+                            </div>
+                            <div id="hr_quota_bars_container"></div>
+                        </div>
+
+                                                <!-- CHARTE DE PERFORMANCE ASCENDANTE -->
+                        <div class="bento-card" style="margin-bottom:18px;">
+                            <div class="card-top-row">
+                                <div>
+                                    <h3 class="card-title">Charte de Performance de la Cohorte</h3>
+                                    <span class="muted-small" id="hr_perf_subtitle">La courbe monte selon la densité de profils performants (≥ 70 %)</span>
+                                </div>
+                                <span class="chip-mint" id="hr_perf_badge">Indice : 0%</span>
+                            </div>
+                            <div id="hr_performance_chart_box" style="width:100%; overflow-x:auto;"></div>
+                        </div>
+
+                        <!-- PLANIFICATEUR INVITATION ENTRETIEN + BARRE D'OUTILS & FILTRES RAPIDES -->
+                        <div class="bento-card" style="margin-bottom:18px;">
+                            <div class="card-top-row">
+                                <h3 class="card-title">Paramètres d'Invitation Entretien (WhatsApp & E-mail)</h3>
+                                <span class="muted-small">Pré-remplit automatiquement vos invitations</span>
+                            </div>
+                            <div class="edit-grid" style="margin-bottom:14px;">
+                                <div class="field-box">
+                                    <label>Date & Heure d'entretien</label>
+                                    <input type="text" id="hr_invite_datetime" placeholder="Ex : Jeudi 20 Nov. à 10h00" oninput="renderHrCardsGrid()">
+                                </div>
+                                <div class="field-box">
+                                    <label>Lieu / Adresse de l'entretien</label>
+                                    <input type="text" id="hr_invite_location" placeholder="Ex : Siège Social, Gombe / Lien Meet" oninput="renderHrCardsGrid()">
+                                </div>
+                            </div>
+
+                            <div class="card-top-row" style="margin-bottom:10px;">
+                                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                                    <button type="button" class="pill-btn-primary" id="btn_select_top_n" onclick="selectTopN()">Sélectionner le Top 3</button>
+                                    <button type="button" class="pill-btn-ghost" onclick="toggleSelectAllHr()">Tout sélectionner</button>
+                                    <button type="button" class="pill-btn-ghost" id="btn_anon_mode" onclick="toggleAnonymousMode()">Mode Anonyme</button>
+                                    <button type="button" class="pill-btn-primary" style="background:#059669;" onclick="exportHrXlsx()">
+                                        <i class="ion-ios-download-outline"></i> Exporter sélection Excel (.CSV)
+                                    </button>
+                                </div>
+                                <span class="chip-blue" id="hr_duel_counter_badge">0/2 pour duel</span>
+                            </div>
+
+                            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+                                <button type="button" class="chip-blue" style="border:none; cursor:pointer;" onclick="setHrQuickFilter('all')">Tous les CV</button>
+                                <button type="button" class="chip-mint" style="border:none; cursor:pointer;" onclick="setHrQuickFilter('top')">Uniquement Top (≥ 70%)</button>
+                                <button type="button" class="chip-amber" style="border:none; cursor:pointer;" onclick="setHrQuickFilter('exp2')">Expérience ≥ 2 ans</button>
+                            </div>
+
+                            <div class="input-icon-box">
+                                <i class="ion-search"></i>
+                                <input type="text" id="hr_search_input" onkeyup="filterHrCards()" placeholder="Rechercher par nom, profession ou compétence...">
+                            </div>
+                        </div>
+
+                        <div class="bento-grid-2" id="hr_candidates_cards_grid" style="margin-bottom:24px;"></div>
+
+                        <!-- COMPARATEUR FACE-À-FACE (RADAR 5 AXES + BARRES) -->
+                        <div class="bento-card" id="hr_face_to_face_section">
+                            <div class="card-top-row">
+                                <h3 class="card-title">Comparateur Face-à-Face (2 Candidats)</h3>
+                                <span class="chip-amber" id="duel_status_tag">En attente (0/2)</span>
+                            </div>
+                            <div id="hr_duel_empty_state" style="text-align:center; padding:18px;">
+                                <p class="muted-small">Cochez <strong>2 candidats</strong> ci-dessus pour afficher le Graphique Radar 5 axes et les barres comparatives.</p>
+                            </div>
+                            <div id="hr_duel_active_content" class="hidden">
+                                <div class="bento-grid-2" id="hr_duel_cards_pair" style="margin-bottom:16px;"></div>
+                                <div class="bento-grid-2">
+                                    <div class="bento-card pastel-ice" style="display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                                        <h4 class="card-title" style="margin-bottom:8px;">Graphique Radar 5 Axes</h4>
+                                        <div id="hr_radar_svg_container"></div>
+                                        <div style="display:flex; gap:14px; font-size:0.78rem; font-weight:700; margin-top:8px;">
+                                            <span style="color:#4A72FF;" id="radar_legend_1">● Candidat A</span>
+                                            <span style="color:#F5A623;" id="radar_legend_2">● Candidat B</span>
+                                        </div>
+                                    </div>
+                                    <div class="bento-card">
+                                        <h4 class="card-title" style="margin-bottom:12px;">Barres Comparatives</h4>
+                                        <div id="hr_duel_bars_box"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <footer class="site-footer">
+                <a href="https://glodyclaver-ui.github.io/glodyclaver.github.io/">
+                    <div class="footer-copyRight">© 2026 Glody-claver. Tous les droits sont réservés, Les Informations exclusives.</div>
+                </a>
+            </footer>
+        </div>
+    </div>
+
+    <div class="hr-floating-bar hidden" id="hr_floating_action_bar">
+        <strong id="hr_selected_count_label">0 candidat(s) sélectionné(s)</strong>
+        <button type="button" class="pill-btn-primary" onclick="exportHrXlsx()">
+            <i class="ion-ios-download-outline"></i> Exporter en Excel (.CSV)
+        </button>
+    </div>
+
+    <nav class="mobile-bottom-pill">
+        <button type="button" class="mob-tab active" data-tab="tab-scan" onclick="switchTab('tab-scan')" title="Espace Candidat">
+            <i class="ion-person"></i>
+        </button>
+        <button type="button" class="mob-tab disabled" data-tab="tab-overview" onclick="switchTab('tab-overview')" title="Résultat">
+            <i class="ion-grid"></i>
+        </button>
+        <button type="button" class="mob-tab disabled" data-tab="tab-interview" onclick="switchTab('tab-interview')" title="Entretien & Offre">
+            <i class="ion-chatbubbles"></i>
+        </button>
+        <button type="button" class="mob-tab disabled" data-tab="tab-apply" onclick="switchTab('tab-apply')" title="Calendrier">
+            <i class="ion-calendar"></i>
+        </button>
+        <button type="button" class="mob-tab" data-tab="tab-hr" onclick="switchTab('tab-hr')" title="Mode Équipe RH">
+            <i class="ion-speakerphone"></i>
+        </button>
+    </nav>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
