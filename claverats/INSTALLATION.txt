@@ -1,0 +1,95 @@
+========================================================================
+GUIDE D'INSTALLATION ET DE LANCEMENT EN LOCAL
+Projet : CLAVERATS Pro - Suite SaaS d'Audit CV, RH & Géolocalisation
+Auteur : Glodi-Placide Oleko Diomba
+========================================================================
+
+1. PRÉREQUIS (À FAIRE UNE SEULE FOIS SUR L'ORDINATEUR)
+------------------------------------------------------------------------
+- Avoir Python 3 (version 3.10 ou supérieure recommandée) installé sur
+  votre ordinateur (téléchargeable sur python.org).
+- Lors de l'installation de Python sur Windows, veillez à bien cocher
+  la case "Add python.exe to PATH".
+
+
+2. INSTALLATION DES BIBLIOTHÈQUES REQUISES
+------------------------------------------------------------------------
+Ouvrez un terminal (Invite de commandes, PowerShell ou terminal intégré
+de VS Code) directement dans le dossier principal du projet
+(analyseur_cv_ats/), puis exécutez la commande suivante :
+
+    python -m pip install -r requirements.txt
+
+(Note : Cette commande télécharge et installe automatiquement tous les
+modules nécessaires : Flask, pypdf, Pillow, numpy, opencv-python-headless,
+openpyxl, requests, beautifulsoup4 et reportlab. Une connexion Internet
+est requise uniquement pour cette étape).
+
+* Mode Secours Hors-Ligne : Si vous lancez le logiciel avant d'avoir
+  installé OpenCV ou openpyxl, CLAVERATS Pro démarre quand même sans
+  erreur en utilisant ses moteurs de repli intégrés (Pillow & CSV).
+
+
+2 bis. (OPTIONNEL) VRAIES FRONTIÈRES DES PAYS SUR LA CARTE
+------------------------------------------------------------------------
+La carte fonctionne déjà hors-ligne avec des contours simplifiés. Pour
+afficher les vrais pays (survol et clic par pays), exécutez UNE SEULE FOIS,
+avec une connexion Internet :
+
+    (automatique : plus de commande nécessaire ; tools/fetch_world.py = secours hors-ligne)
+
+Le fichier static/data/world.geojson est créé ; ensuite tout reste local.
+
+
+3. LANCEMENT DE L'APPLICATION
+------------------------------------------------------------------------
+Dans le même terminal, tapez la commande suivante et appuyez sur Entrée :
+
+    python app.py
+
+Le serveur local va démarrer et afficher l'adresse :
+    http://127.0.0.1:5002
+
+
+4. UTILISATION DANS LE NAVIGATEUR (CANDIDAT & ÉQUIPE RH)
+------------------------------------------------------------------------
+- Ouvrez votre navigateur web (Chrome, Edge, Firefox).
+- Tapez l'adresse : http://127.0.0.1:5002
+- Espace Candidat : Importez votre CV (.PDF ou texte) et l'offre
+  (PDF, URL ou texte) pour obtenir votre score ATS, vos dates favorables
+  de candidature, le simulateur multi-offres et votre lettre PDF.
+- Espace Équipe RH : Cliquez sur "Mode Équipe RH" en haut à droite pour
+  analyser jusqu'à 50 CV PDF simultanément, activer l'anonymisation
+  RGPD, comparer les profils en duel 360° et exporter en Excel (.xlsx).
+- Confidentialité : L'application fonctionne 100 % en local sur votre
+  machine (aucun CV n'est envoyé vers un serveur externe).
+- Pour arrêter le serveur, retournez dans le terminal et appuyez sur
+  les touches : Ctrl + C.
+
+
+5. DÉPANNAGE RAPIDE EN CAS DE BESOIN
+------------------------------------------------------------------------
+- Si la commande "python" n'est pas reconnue sous Windows, essayez :
+      py -m pip install -r requirements.txt
+      py app.py
+- Si le port 5002 est déjà occupé, fermez l'ancien terminal ouvert ou
+  modifiez le numéro de port tout en bas du fichier app.py.
+========================================================================
+
+=== NOUVEAUTES v2.1 ===
+- Aucune nouvelle dependance obligatoire (pip install -r requirements.txt suffit).
+- Optionnel : OCR local -> installer Tesseract + `pip install pytesseract` (sinon desactive automatiquement).
+- Les donnees sont dans le dossier data/ (JSON). Sauvegardez-le pour tout conserver.
+- Lancer : python app.py  puis ouvrir http://127.0.0.1:5002  (bouton "Installer" dans la barre laterale pour la PWA).
+- Mise a jour : au prochain chargement, un bandeau propose "Mettre a jour" (cache claverats-v2.1).
+- Tests : cd tests && python -m unittest discover -p "test_*.py"
+
+
+LECTURE DES IMAGES ET PDF SCANNÉS (OCR) - OPTIONNEL, 100 % LOCAL
+-----------------------------------------------------------------
+Aucun fichier n'est téléchargé « en ligne » à l'usage : tout reste sur votre poste. Mais l'OCR a besoin d'un PROGRAMME installé une fois :
+  1. pip install -r requirements.txt            (installe pytesseract, OpenCV, Pillow)
+  2. Installez Tesseract OCR pour Windows (installeur « UB Mannheim ») en cochant la langue « French ».
+     Chemin habituel : C:\Program Files\Tesseract-OCR  (ajoutez-le au PATH Windows, puis redémarrez le terminal).
+  3. Relancez l'application : un message vert « Lecture des images… activée » apparaît sous l'import du CV.
+Sans Tesseract, un message orange l'indique et les CV image/scannés ne peuvent pas être lus (collez alors le texte).

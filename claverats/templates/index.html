@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CLAVERATS Pro | Audit CV & Espace RH</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#4A72FF">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/icons.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/geomap.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/enhance.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mobile.css') }}">
+</head>
+<body>
+    <div class="app-shell">
+        <aside class="left-sidebar">
+            <div class="sidebar-logo" title="CLAVERATS Pro"><i class="ion-android-checkmark-circle"></i></div>
+            <nav class="sidebar-nav">
+                <button type="button" class="side-btn active" data-tab="tab-scan" data-tooltip="Nouvelle Analyse" onclick="switchTab('tab-scan')">
+                    <i class="ion-plus-round"></i>
+                </button>
+                <button type="button" class="side-btn disabled" data-tab="tab-overview" data-tooltip="Vue d'ensemble" onclick="switchTab('tab-overview')">
+                    <i class="ion-grid"></i>
+                </button>
+                <button type="button" class="side-btn disabled" data-tab="tab-profile" data-tooltip="Profil & Auto-Audit" onclick="switchTab('tab-profile')">
+                    <i class="ion-person"></i>
+                </button>
+                <button type="button" class="side-btn disabled" data-tab="tab-interview" data-tooltip="Entretien & Multi-Offres" onclick="switchTab('tab-interview')">
+                    <i class="ion-chatboxes"></i>
+                </button>
+                <button type="button" class="side-btn disabled" data-tab="tab-apply" data-tooltip="Candidature & Agenda" onclick="switchTab('tab-apply')">
+                    <i class="ion-calendar"></i>
+                </button>
+                <button type="button" class="side-btn hr-accent" data-tab="tab-hr" data-tooltip="Espace Équipe RH" onclick="switchTab('tab-hr')">
+                    <i class="ion-speakerphone"></i>
+                </button>
+                <button type="button" class="side-btn" data-tab="tab-intel" data-tooltip="Intelligence locale" onclick="switchTab('tab-intel')">
+                    <i class="ion-ios-pulse-strong"></i>
+                </button>
+                <button type="button" class="side-btn" data-tab="tab-me" data-tooltip="Mon espace (objectifs & formation)" onclick="switchTab('tab-me')">
+                    <i class="ion-target"></i>
+                </button>
+                <button type="button" class="side-btn" data-tab="tab-ref" data-tooltip="Paramètres" onclick="switchTab('tab-ref')">
+                    <i class="ion-gear-b"></i>
+                </button>
+            </nav>
+            <button type="button" class="side-btn" id="btn_pwa_install" style="display:none" data-tooltip="Installer l'application" onclick="installPwa()">
+                <i class="ion-android-download"></i>
+            </button>
+            <button type="button" class="side-btn" data-tooltip="Thème Clair / Sombre" onclick="toggleTheme()">
+                <i class="ion-contrast"></i>
+            </button>
+        </aside>
+
+        <div class="main-area">
+            <header class="top-header">
+                <div class="header-left">
+                    <div class="avatar-pill" id="nav_initials" onclick="switchTab('tab-scan')"><i class="ion-person"></i></div>
+                    <div class="welcome-text">
+                        <span class="sub-greet" id="nav_location">Bonjour,</span>
+                        <strong id="nav_username">Candidat CLAVERATS</strong>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <select id="header_history_select" class="pill-btn-ghost hidden" style="max-width:190px; cursor:pointer;" onchange="if(this.value !== '') loadHistoryEntry(parseInt(this.value, 10))">
+                        <option value="">Historique (5)</option>
+                    </select>
+                    <button type="button" class="pill-btn-ghost hidden" id="btn_resume_history" onclick="restoreLastLocalSession()">
+                        <i class="ion-refresh"></i> <span>Reprendre</span>
+                    </button>
+                    <button type="button" class="pill-btn-primary" id="mode_switch_btn" onclick="toggleWorkspaceMode()">
+                        <i class="ion-speakerphone"></i> <span>Mode Équipe RH</span>
+                    </button>
+                    <button type="button" class="bell-circle" title="Changer de thème" onclick="toggleTheme()"><i class="ion-contrast"></i></button>
+                </div>
+            </header>
+
+            <main class="bento-container">
+                <div class="page-hero">
+                    <div>
+                        <h1 id="greeting_title">Organisez votre <span class="underline-blue">candidature</span></h1>
+                        <p id="greeting_sub">Comparez votre CV et l'offre d'emploi 100 % en local sur CLAVERATS.</p>
+                    </div>
+                    <div class="date-pill"><i class="ion-calendar"></i> <span id="current_date_chip">--/--/2026</span></div>
+                </div>
+
+                <div id="alert_box" class="alert-error"></div>
+
+                                <!-- ONGLET 1 : NOUVELLE ANALYSE -->
+                <section id="tab-scan" class="tab-pane bento-grid-2">
+                    <div class="bento-card">
+                        <div class="card-top-row">
+                            <span class="chip-blue">01 • VOTRE CV</span>
+                            <span class="muted-small">PDF ou Texte</span>
+                        </div>
+                        <h3 class="card-title">Document du Candidat</h3>
+                        <label class="drop-zone" for="cv_pdf">
+                            <div class="drop-circle"><i class="ion-upload"></i></div>
+                            <strong id="cv-file-label">Importer votre CV (PDF, JPG ou PNG)</strong>
+                            <span>Extraction automatique du nom, photo, posture et compétences</span>
+                            <input type="file" id="cv_pdf" accept=".pdf,.png,.jpg,.jpeg,image/png,image/jpeg" onchange="handleFileSelect(this, 'cv-file-label', 'Importer votre CV (PDF, JPG ou PNG)')">
+                        </label>
+                        <div class="soft-divider"><span>OU COLLEZ LE TEXTE DU CV</span></div>
+                        <textarea id="cv_text" rows="5" placeholder="Collez ici le contenu complet de votre CV..."></textarea>
+                    </div>
+
+                    <div class="bento-card">
+                        <div class="card-top-row">
+                            <span class="chip-amber">02 • L'OFFRE</span>
+                            <span class="muted-small">PDF, URL ou Texte</span>
+                        </div>
+                        <h3 class="card-title">Annonce d'Emploi Ciblée</h3>
+                        <label class="drop-zone compact" for="job_pdf">
+                            <i class="ion-document-text"></i>
+                            <span id="job-file-label">Importer l'offre en PDF (Optionnel)</span>
+                            <input type="file" id="job_pdf" accept=".pdf" onchange="handleFileSelect(this, 'job-file-label', 'Importer l\'offre en PDF (Optionnel)')">
+                        </label>
+                        <div class="input-icon-box">
+                            <i class="ion-link"></i>
+                            <input type="url" id="job_url" placeholder="https://linkedin.com...">
+                        </div>
+                        <div class="soft-divider"><span>OU COLLEZ LE TEXTE DE L'OFFRE</span></div>
+                        <textarea id="job_text" rows="5" placeholder="Collez ici les missions et compétences demandées..."></textarea>
+                    </div>
+
+                    <div class="form-actions-row">
+                        <button type="button" class="btn-royal" id="btn-analyze" onclick="runMatching()">
+                            <i class="ion-analytics"></i> Lancer l'audit intelligent
+                        </button>
+                        <button type="button" class="btn-soft-reset" onclick="resetForm()">
+                            <i class="ion-refresh"></i> Réinitialiser
+                        </button>
+                    </div>
+                </section>
+
+                <!-- ONGLET 2 : VUE D'ENSEMBLE -->
+                <section id="tab-overview" class="tab-pane hidden">
+                    <div class="bento-grid-2" style="margin-bottom: 18px;">
+                        <div id="geo_banner" class="status-banner ok"></div>
+                        <div id="email_trust_banner" class="status-banner ok"></div>
+                    </div>
+
+                    <div class="bento-kpi-3">
+                        <div class="bento-card">
+                            <div class="card-top-row">
+                                <span class="kpi-label">Score Global ATS</span>
+                                <button type="button" class="chip-blue" style="border:none; cursor:pointer;" onclick="exportPDF()">Bilan PDF</button>
+                            </div>
+                            <div class="kpi-number" id="ov_score">0%</div>
+                            <div class="kpi-bottom-row">
+                                <span class="trend-mint" id="ov_projected_hint">Potentiel : 0%</span>
+                                <svg class="sparkline-svg" viewBox="0 0 100 32"><path d="M2 26 Q 25 22, 40 16 T 75 10 T 98 4" fill="none" stroke="#4A72FF" stroke-width="3" stroke-linecap="round"/></svg>
+                            </div>
+                        </div>
+
+                        <div class="bento-card">
+                            <div class="card-top-row">
+                                <span class="kpi-label">Compétences Validées</span>
+                                <span class="kpi-period" id="ov_tier_chip">Toutes détectées</span>
+                            </div>
+                            <div class="kpi-number" id="ov_skills">0 / 0</div>
+                            <div class="kpi-bottom-row">
+                                <span class="trend-amber" id="ov_missing_count">0 manquant</span>
+                                <div class="mini-donut"></div>
+                            </div>
+                        </div>
+
+                        <div class="bento-card">
+                            <div class="card-top-row">
+                                <span class="kpi-label">Expérience & Posture</span>
+                                <span class="kpi-period" id="ov_posture_chip">Polyvalente</span>
+                            </div>
+                            <div class="kpi-number" id="ov_exp">0 an(s)</div>
+                            <div class="tri-bar"><span class="seg-blue"></span><span class="seg-amber"></span><span class="seg-mint"></span></div>
+                            <div class="kpi-bottom-row" style="margin-top:8px;">
+                                <span class="muted-small" id="ov_exp_req">0 an(s) requis</span>
+                                <span class="muted-small" id="ov_seniority_chip">Junior</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bento-grid-2" style="margin-bottom:20px;">
+                        <div class="bento-card">
+                            <div class="card-top-row">
+                                <h3 class="card-title">Diagnostic de Match Transparent</h3>
+                                <div class="segmented-pills" id="cand_skill_pills">
+                                    <button type="button" class="seg-pill active" onclick="switchCandidateSkillPill('all', this)">Tout</button>
+                                    <button type="button" class="seg-pill" onclick="switchCandidateSkillPill('matched', this)">Validées</button>
+                                    <button type="button" class="seg-pill" onclick="switchCandidateSkillPill('missing', this)">Manquantes</button>
+                                </div>
+                            </div>
+                            <div id="cand_block_matched">
+                                <div class="tags-wrap" id="matched_tags" style="margin-bottom:16px;"></div>
+                                <div id="category_bars" class="cat-bars"></div>
+                            </div>
+                            <div id="cand_block_missing" style="margin-top:16px; padding-top:14px; border-top:1px solid var(--border);">
+                                <div class="card-top-row">
+                                    <span class="kpi-label">À ajouter (Cliquez pour simuler)</span>
+                                    <span class="chip-amber">Simulateur</span>
+                                </div>
+                                <div class="tags-wrap" id="missing_tags"></div>
+                            </div>
+                        </div>
+
+                        <!-- WIDGET CALENDRIER HORIZONTAL COMPACT (IMAGE sVDB6q) -->
+                        <div class="bento-card">
+                            <div class="card-top-row">
+                                <button type="button" class="cal-nav-btn" onclick="shiftMiniCalWeek(-7)"><i class="ion-chevron-left"></i></button>
+                                <strong id="mini_cal_month_label">Novembre 2026</strong>
+                                <button type="button" class="cal-nav-btn" onclick="shiftMiniCalWeek(7)"><i class="ion-chevron-right"></i></button>
+                            </div>
+                            <div class="mini-week-strip" id="mini_week_strip"></div>
+                            <div class="mini-growth-card">
+                                <div>
+                                    <strong style="font-size:0.9rem;">Indice de Réactivité Recruteur</strong>
+                                    <p class="trend-mint" id="mini_cal_advice">Date optimale recommandée en orange</p>
+                                </div>
+                                <div class="ring-gauge" id="mini_cal_gauge">85%</div>
+                            </div>
+                            <ul class="info-list" id="gap_summary_list" style="margin-top:14px;"></ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ONGLET 3 : PROFIL COMPLET, RUBRIQUES SÉPARÉES, CARTE & CV ATS -->
+                <section id="tab-profile" class="tab-pane hidden">
+                    <div class="bento-grid-2" style="margin-bottom:20px;">
+                        <div class="bento-card">
+                            <div class="card-top-row">
+                                <h3 class="card-title">Compléter & Corriger mon Profil CV</h3>
+                                <span class="chip-blue">Chaque rubrique séparée</span>
+                            </div>
+
+                            <div class="edit-grid">
+                                <div class="field-box"><label>Nom complet</label><input type="text" id="edit_name" oninput="verifyFieldAgainstCV('edit_name','verif_name')"><span id="verif_name" class="verif-badge"></span></div>
+                                <div class="field-box"><label>Profession / Titre visé</label><input type="text" id="edit_profession" placeholder="Ex: Développeur Full Stack, Infirmier..." oninput="verifyFieldAgainstCV('edit_profession','verif_prof')"><span id="verif_prof" class="verif-badge"></span></div>
+                                <div class="field-box"><label>Votre Ville / Province / Pays (CV)</label><input type="text" id="edit_cand_loc" oninput="verifyFieldAgainstCV('edit_cand_loc','verif_cand_loc')"><span id="verif_cand_loc" class="verif-badge"></span></div>
+                                <div class="field-box"><label>Lieu de l'offre</label><input type="text" id="edit_job_loc"></div>
+                                <div class="field-box"><label>Vos années d'expérience</label><input type="number" step="0.5" id="edit_cand_exp"></div>
+                                <div class="field-box"><label>Expérience exigée</label><input type="number" step="0.5" id="edit_req_exp"></div>
+                                <div class="field-box"><label>Diplôme / Niveau d'études</label><input type="text" id="edit_cand_edu" placeholder="Ex: Licence en Informatique" oninput="verifyFieldAgainstCV('edit_cand_edu','verif_edu')"><span id="verif_edu" class="verif-badge"></span></div>
+                                <div class="field-box"><label>Langues parlées (séparées par virgule)</label><input type="text" id="edit_cand_langs" placeholder="Français, Anglais, Lingala" oninput="verifySkillsAgainstCV('edit_cand_langs','verif_langs', lastReport?.raw_cv_text)"><span id="verif_langs" class="verif-badge"></span></div>
+                            </div>
+
+                            <div class="soft-divider"><span>COMPÉTENCES & OUTILS PAR CATÉGORIE (SÉPARÉS PAR VIRGULE)</span></div>
+
+                            <div class="field-box" style="margin-bottom:10px;">
+                                <label>Langages de programmation (Informaticiens / Tech)</label>
+                                <input type="text" id="edit_cat_prog" placeholder="Ex: Python, JavaScript, SQL, PHP" oninput="verifySkillsAgainstCV('edit_cat_prog','verif_cat_prog', lastReport?.raw_cv_text)">
+                                <span id="verif_cat_prog" class="verif-badge"></span>
+                            </div>
+
+                            <div class="field-box" style="margin-bottom:10px;">
+                                <label>Logiciels, Frameworks & Outils informatiques</label>
+                                <input type="text" id="edit_cat_tools" placeholder="Ex: Excel, Word, Power BI, React, Docker, Sage" oninput="verifySkillsAgainstCV('edit_cat_tools','verif_cat_tools', lastReport?.raw_cv_text)">
+                                <span id="verif_cat_tools" class="verif-badge"></span>
+                            </div>
+
+                            <div class="field-box" style="margin-bottom:10px;">
+                                <label>Compétences métier, Santé, Gestion & Certifications</label>
+                                <input type="text" id="edit_cat_domain" placeholder="Ex: Comptabilité, Soins infirmiers, Gestion de projet, OHADA" oninput="verifySkillsAgainstCV('edit_cat_domain','verif_cat_domain', lastReport?.raw_cv_text)">
+                                <span id="verif_cat_domain" class="verif-badge"></span>
+                            </div>
+
+                            <div class="field-box" style="margin-bottom:14px;">
+                                <label>Soft Skills & Attitudes professionnelles</label>
+                                <input type="text" id="edit_cat_soft" placeholder="Ex: Leadership, Rigueur, Travail d'équipe, Relation client" oninput="verifySkillsAgainstCV('edit_cat_soft','verif_cat_soft', lastReport?.raw_cv_text)">
+                                <span id="verif_cat_soft" class="verif-badge"></span>
+                            </div>
+
+                            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                                <button type="button" class="btn-royal" style="flex:2;" onclick="recalculateReport()">
+                                    <i class="ion-checkmark-round"></i> Valider & Recalculer mon Score
+                                </button>
+                                <button type="button" class="pill-btn-ghost" style="flex:1; justify-content:center;" onclick="exportOptimizedCvPdf()">
+                                    <i class="ion-document"></i> CV Optimisé ATS (.PDF)
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style="display:flex; flex-direction:column; gap:20px;">
+                            <div class="bento-card">
+                                <div class="card-top-row">
+                                    <h3 class="card-title">Carte Visuelle : Vous vs L'Offre</h3>
+                                    <span class="chip-amber">Point Rouge = Offre</span>
+                                </div>
+                                <div id="cand_geo_map_box" style="height:210px; border-radius:16px; border:1px solid var(--border); overflow:hidden;"></div>
+                                <p class="muted-small" id="cand_geo_map_caption" style="margin-top:8px;">Visualisation directe de votre position et du lieu de l'offre.</p>
+                            </div>
+
+                            <div class="bento-card">
+                                <div class="card-top-row">
+                                    <h3 class="card-title">Optimiseur CV "ATS-Ready" & Parcours</h3>
+                                    <span class="chip-mint" id="ats_ready_badge">100% ATS</span>
+                                </div>
+                                <ul class="info-list" id="ats_checks_list" style="margin-bottom:14px;"></ul>
+                                <div class="soft-divider"><span>EMPLOYEURS, POSTES & TÂCHES DÉTECTÉS</span></div>
+                                <ul class="info-list" id="structured_exp_list" style="margin-bottom:14px;"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+
+
+                <!-- ONGLET 4 : ENTRETIEN & SIMULATEUR MULTI-OFFRES AVEC GRAPHIQUES -->
+                <section id="tab-interview" class="tab-pane hidden">
+                    <div class="bento-grid-2" style="margin-bottom:20px;">
+                        <div class="bento-card">
+                            <div class="card-top-row">
+                                <h3 class="card-title">Questions probables en entretien</h3>
+                                <button type="button" class="chip-blue" style="border:none; cursor:pointer;" onclick="toggleInterviewPractice()">
+                                    <i class="ion-clock"></i> Mode Chronomètre (90s)
+                                </button>
+                            </div>
+                            <div id="interview_practice_box" class="bento-card pastel-cream hidden" style="margin-bottom:14px; padding:16px;">
+                                <div class="card-top-row">
+                                    <strong id="practice_q_title">Question 1</strong>
+                                    <span class="chip-amber" id="practice_timer_lbl">01:30</span>
+                                </div>
+                                <p id="practice_q_text" style="font-size:0.9rem; margin-bottom:10px;"></p>
+                                <textarea id="practice_notes" rows="2" placeholder="Notez vos points clés (Méthode STAR)..."></textarea>
+                                <div style="display:flex; gap:8px; margin-top:10px;">
+                                    <button type="button" class="pill-btn-primary" onclick="nextPracticeQuestion()">Question suivante</button>
+                                    <button type="button" class="pill-btn-ghost" onclick="resetPracticeTimer()">Relancer 90s</button>
+                                </div>
+                            </div>
+                            <ul class="info-list" id="interview_questions_list"></ul>
+                        </div>
+
+                        <div class="bento-card">
+                            <div class="card-top-row">
+                                <h3 class="card-title">Éléments clés de l'offre & Trajet</h3>
+                                <span class="chip-amber">Offre #1 (Actuelle)</span>
+                            </div>
+                            <ul class="info-list" id="offer_elements_list"></ul>
+                        </div>
+                    </div>
+
+                    <!-- SIMULATEUR MULTI-OFFRES (OFFRE INITIALE #1 + OFFRES PDF/URL/TEXTE) -->
+                    <div class="bento-card">
+                        <div class="card-top-row">
+                            <div>
+                                <h3 class="card-title">Simulateur Multi-Offres de Réussite (Matrice & Graphiques)</h3>
+                                <p class="muted-small">Votre offre actuelle compte déjà comme <b>Offre #1</b>. Ajoutez 1 à 3 offres supplémentaires (PDF, lien URL ou texte) pour comparer vos chances.</p>
+                            </div>
+                            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                                <button type="button" class="pill-btn-ghost" onclick="resetMultiOfferSimulator()">
+                                    <i class="ion-refresh"></i> Réinitialiser / Actualiser
+                                </button>
+                                <button type="button" class="pill-btn-primary" onclick="runMultiOfferSimulation()">
+                                    <i class="ion-flash"></i> Comparer les Offres
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="multi_offer_alert_box" class="info-notice-banner hidden" style="margin-bottom:14px;"></div>
+
+                        <div class="bento-grid-2" style="margin-bottom:14px;">
+                            <div class="bento-card pastel-ice" style="padding:16px;">
+                                <div class="card-top-row" style="margin-bottom:8px;">
+                                    <span class="chip-blue">OFFRE #1 (DÉJÀ CHARGÉE)</span>
+                                    <span class="muted-small" id="mo_base_offer_badge">Prête</span>
+                                </div>
+                                <strong id="mo_base_offer_title" style="display:block; font-size:0.92rem; margin-bottom:6px;">Offre initiale analysée au départ</strong>
+                                <p class="muted-small">Sera automatiquement comparée avec les offres que vous ajoutez à côté.</p>
+                            </div>
+
+                            <div class="bento-card" style="padding:16px;">
+                                <div class="card-top-row" style="margin-bottom:8px;">
+                                    <span class="chip-amber">OFFRE #2 (À AJOUTER)</span>
+                                    <label class="chip-gray" style="cursor:pointer;"><i class="ion-document"></i> PDF <input type="file" id="mo_pdf_1" accept=".pdf" style="display:none;" onchange="handleFileSelect(this, 'mo_pdf_lbl_1', 'PDF')"></label>
+                                </div>
+                                <span class="muted-small" id="mo_pdf_lbl_1" style="display:block; margin-bottom:6px;"></span>
+                                <input type="text" id="mo_title_1" placeholder="Titre Offre #2 (ex: Data Analyst)" style="margin-bottom:6px; width:100%; padding:8px 12px; border-radius:12px; border:1px solid var(--border); background:var(--surface-alt); color:var(--text);">
+                                <input type="url" id="mo_url_1" placeholder="Lien URL de l'offre #2 (Optionnel)" style="margin-bottom:6px; width:100%; padding:8px 12px; border-radius:12px; border:1px solid var(--border); background:var(--surface-alt); color:var(--text);">
+                                <textarea id="mo_text_1" rows="2" placeholder="Ou collez le texte de l'offre #2..."></textarea>
+                            </div>
+
+                            <div class="bento-card" style="padding:16px;">
+                                <div class="card-top-row" style="margin-bottom:8px;">
+                                    <span class="chip-gray">OFFRE #3 (OPTIONNEL)</span>
+                                    <label class="chip-gray" style="cursor:pointer;"><i class="ion-document"></i> PDF <input type="file" id="mo_pdf_2" accept=".pdf" style="display:none;" onchange="handleFileSelect(this, 'mo_pdf_lbl_2', 'PDF')"></label>
+                                </div>
+                                <span class="muted-small" id="mo_pdf_lbl_2" style="display:block; margin-bottom:6px;"></span>
+                                <input type="text" id="mo_title_2" placeholder="Titre Offre #3" style="margin-bottom:6px; width:100%; padding:8px 12px; border-radius:12px; border:1px solid var(--border); background:var(--surface-alt); color:var(--text);">
+                                <input type="url" id="mo_url_2" placeholder="Lien URL de l'offre #3 (Optionnel)" style="margin-bottom:6px; width:100%; padding:8px 12px; border-radius:12px; border:1px solid var(--border); background:var(--surface-alt); color:var(--text);">
+                                <textarea id="mo_text_2" rows="2" placeholder="Ou collez le texte de l'offre #3..."></textarea>
+                            </div>
+
+                            <div class="bento-card" style="padding:16px;">
+                                <div class="card-top-row" style="margin-bottom:8px;">
+                                    <span class="chip-gray">OFFRE #4 (OPTIONNEL)</span>
+                                    <label class="chip-gray" style="cursor:pointer;"><i class="ion-document"></i> PDF <input type="file" id="mo_pdf_3" accept=".pdf" style="display:none;" onchange="handleFileSelect(this, 'mo_pdf_lbl_3', 'PDF')"></label>
+                                </div>
+                                <span class="muted-small" id="mo_pdf_lbl_3" style="display:block; margin-bottom:6px;"></span>
+                                <input type="text" id="mo_title_3" placeholder="Titre Offre #4" style="margin-bottom:6px; width:100%; padding:8px 12px; border-radius:12px; border:1px solid var(--border); background:var(--surface-alt); color:var(--text);">
+                                <input type="url" id="mo_url_3" placeholder="Lien URL de l'offre #4 (Optionnel)" style="margin-bottom:6px; width:100%; padding:8px 12px; border-radius:12px; border:1px solid var(--border); background:var(--surface-alt); color:var(--text);">
+                                <textarea id="mo_text_3" rows="2" placeholder="Ou collez le texte de l'offre #4..."></textarea>
+                            </div>
+                        </div>
+
+                        <div id="multi_offer_matrix_box" class="hidden"></div>
+                    </div>
+                </section>
+
+
+                <!-- ONGLET 5 : CANDIDATURE, CALENDRIER VERT/ORANGE & CHECKLIST -->
+                <section id="tab-apply" class="tab-pane hidden">
+                    <div class="bento-grid-2" style="margin-bottom:20px;">
+                        <div class="bento-card">
+                            <div class="card-top-row">
+                                <button type="button" class="cal-nav-btn" onclick="changeCalendarMonth(-1)"><i class="ion-chevron-left"></i></button>
+                                <strong id="cal_month_title">Mois Année</strong>
+                                <button type="button" class="cal-nav-btn" onclick="changeCalendarMonth(1)"><i class="ion-chevron-right"></i></button>
+                                <span class="chip-blue" id="cal_days_badge">-- jours</span>
+                            </div>
+                            <div class="cal-legend-row">
+                                <span><i class="dot-green"></i> Jours possibles</span>
+                                <span><i class="dot-orange"></i> Dates favorables recommandées</span>
+                            </div>
+                            <div class="calendar-weekdays"><span>Lun</span><span>Mar</span><span>Mer</span><span>Jeu</span><span>Ven</span><span>Sam</span><span>Dim</span></div>
+                            <div id="apply_calendar_grid" class="calendar-grid"></div>
+                            <div class="cal-agenda-bar">
+                                <span class="muted-small" id="selected_date_label">Date choisie : Aujourd'hui</span>
+                                <button type="button" class="pill-btn-ghost" onclick="downloadCalendarICS()">
+                                    <i class="ion-android-alarm-clock"></i> Agenda (.ICS)
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="bento-card">
+                            <div class="card-top-row">
+                                <h3 class="card-title">Détails Employeur</h3>
+                                <span class="chip-mint">En cours</span>
+                            </div>
+                            <div class="meta-rows">
+                                <div class="meta-row"><span class="meta-key">Organisation</span><span class="meta-val" id="emp_company">-</span></div>
+                                <div class="meta-row"><span class="meta-key">Contact RH</span><span class="meta-val" id="emp_email">-</span></div>
+                                <div class="meta-row"><span class="meta-key">Où postuler</span><span class="meta-val" id="emp_apply_link">-</span></div>
+                                <div class="meta-row"><span class="meta-key">Clôture</span><span class="meta-val" id="emp_deadline">-</span></div>
+                                <div class="meta-row"><span class="meta-key">Étiquettes</span><div class="meta-tags" id="emp_labels"></div></div>
+                            </div>
+
+                            <div class="card-top-row" style="margin-top:16px;">
+                                <strong style="font-size:0.9rem;">Checklist avant envoi</strong>
+                                <span class="chip-blue" id="checklist_counter">0/4</span>
+                            </div>
+                            <div class="checklist-box" id="apply_checklist">
+                                <label><input type="checkbox" onchange="updateChecklistCount()"> <span id="chk_cv_filename">CV renommé au nom du candidat (CV_Prenom_Nom.pdf)</span></label>
+                                <label><input type="checkbox" onchange="updateChecklistCount()"> Mots-clés manquants ajoutés</label>
+                                <label><input type="checkbox" onchange="updateChecklistCount()"> Date limite & lieu vérifiés</label>
+                                <label><input type="checkbox" onchange="updateChecklistCount()"> Adresse e-mail RH vérifiée</label>
+                            </div>
+
+                            <!-- BARRE DE PROGRESSION & MESSAGE VALIDATION CANDIDAT -->
+                            <div class="checklist-progress-wrap">
+                                <div class="cat-track" style="height:10px;">
+                                    <div class="cat-fill" id="checklist_progress_bar" style="width:0%; transition:width 0.3s ease;"></div>
+                                </div>
+                                <div id="checklist_ready_banner" class="status-banner ok hidden" style="margin-top:12px;">
+                                    <i class="ion-checkmark-circled"></i> Parfait ! Toutes les vérifications sont validées : vous pouvez envoyer votre candidature et postuler maintenant !
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bento-card">
+                        <div class="card-top-row">
+                            <h3 class="card-title">Message / Lettre de motivation</h3>
+                            <div style="display:flex; gap:8px;">
+                                <button type="button" class="pill-btn-ghost" onclick="exportCoverLetterPDF()">
+                                    <i class="ion-document"></i> Lettre PDF
+                                </button>
+                                <button type="button" class="pill-btn-primary" onclick="copyPitch()">
+                                    <i class="ion-ios-copy-outline"></i> <span id="copy-pitch-text">Copier</span>
+                                </button>
+                            </div>
+                        </div>
+                        <textarea id="cover_pitch_box" rows="6"></textarea>
+                    </div>
+                </section>
+
+                <!-- ONGLET 6 : ESPACE ÉQUIPE RH (MODULES 1, 2, 3 & 5) -->
+                <section id="tab-intel" class="tab-pane hidden"><div id="intel_root"></div></section>
+                <section id="tab-me" class="tab-pane hidden"><div id="me_root"></div></section>
+                <section id="tab-ref" class="tab-pane hidden"><div id="ref_root"></div></section>
+
+                <section id="tab-hr" class="tab-pane hidden">
+                    <div class="bento-grid-2" style="margin-bottom:20px;">
+                        <div class="bento-card">
+                            <div class="card-top-row">
+                                <span class="chip-amber">01 • DOSSIER CANDIDATURES</span>
+                                <span class="muted-small">Bulk Upload jusqu'à 50 CV</span>
+                            </div>
+                            <h3 class="card-title">Importer les CV reçus (.PDF)</h3>
+                            <label class="drop-zone" for="hr_cv_files" id="hr_drop_zone">
+                                <div class="drop-circle" style="background:#F5A623;"><i class="ion-folder"></i></div>
+                                <strong id="hr-files-label">Sélectionner ou glisser plusieurs CV (.PDF)</strong>
+                                <span>Extraction photo OpenCV, expériences détaillées, posture et score</span>
+                                <input type="file" id="hr_cv_files" accept=".pdf,.png,.jpg,.jpeg,image/png,image/jpeg" multiple onchange="handleMultiFiles(this)">
+                            </label>
+                            <div class="edit-grid" style="margin-top:14px;">
+                                <div class="field-box">
+                                    <label>Nombre de postes (Quota)</label>
+                                    <input type="number" id="hr_positions_count" value="3" min="1" max="50" oninput="updateTopNButtonLabel()">
+                                </div>
+                                <div class="field-box">
+                                    <label>Priorité Compétences (%)</label>
+                                    <input type="number" id="hr_tech_weight" value="60" min="30" max="90" step="5">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bento-card">
+                            <div class="card-top-row">
+                                <span class="chip-blue">02 • OFFRE À POURVOIR</span>
+                                <span class="muted-small">PDF, Lien URL ou Texte</span>
+                            </div>
+                            <h3 class="card-title">Description du poste recherché</h3>
+                            <label class="drop-zone compact" for="hr_job_pdf">
+                                <i class="ion-document-text"></i>
+                                <span id="hr-job-pdf-label">Importer l'offre en PDF (Optionnel)</span>
+                                <input type="file" id="hr_job_pdf" accept=".pdf" onchange="handleFileSelect(this, 'hr-job-pdf-label', 'Importer l\'offre en PDF (Optionnel)')">
+                            </label>
+                            <div class="input-icon-box" style="margin-bottom:10px;">
+                                <i class="ion-link"></i>
+                                <input type="url" id="hr_job_url" placeholder="https://linkedin.com... (Lien de l'offre)">
+                            </div>
+                            <textarea id="hr_job_text" rows="5" placeholder="Ou collez ici les compétences, diplômes, lieu et expériences exigés..."></textarea>
+                        </div>
+
+                        <div id="hr_form_notice_box" class="info-notice-banner hidden" style="grid-column: 1 / -1;"></div>
+
+                        <div class="form-actions-row">
+                            <button type="button" class="btn-royal" id="btn-hr-analyze" onclick="runHrBatch()">
+                                <i class="ion-speakerphone"></i> Analyser et classer tous les CV reçus
+                            </button>
+                            <button type="button" class="btn-soft-reset" onclick="resetHrDashboard()">
+                                <i class="ion-refresh"></i> Restaurer
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="hr_results_area" class="hidden">
+                        <div id="hr_market_alert_banner" class="status-banner ok" style="margin-bottom:16px;"></div>
+
+                        <div class="bento-kpi-3" style="grid-template-columns: repeat(4, 1fr);">
+                            <div class="bento-card">
+                                <div class="card-top-row"><span class="kpi-label">CV Analysés</span><span class="chip-blue" id="hr_wanted_chip">Voulu : 3</span></div>
+                                <div class="kpi-number" id="hr_total_cv">0</div>
+                                <span class="trend-mint" id="hr_quota_label">Moyenne : 0%</span>
+                            </div>
+                            <div class="bento-card">
+                                <div class="card-top-row"><span class="kpi-label">Bons Profils (≥ 45%)</span><span class="chip-mint">Retenus</span></div>
+                                <div class="kpi-number" id="hr_top_count">0</div>
+                                <span class="trend-mint" id="hr_top_pct_label">0% de la cohorte</span>
+                            </div>
+                            <div class="bento-card">
+                                <div class="card-top-row"><span class="kpi-label">Qualité Lecture PDF</span><span class="muted-small">100% / Partiel / Image</span></div>
+                                <div class="kpi-number" id="hr_readability_summary" style="font-size:1.35rem;">0 / 0 / 0</div>
+                                <span class="muted-small">Filtrez ci-dessous</span>
+                            </div>
+                            <div class="bento-card">
+                                <div class="card-top-row"><span class="kpi-label">Doublons Détectés</span><span class="chip-amber">Auto-Tri</span></div>
+                                <div class="kpi-number" id="hr_dup_count">0</div>
+                                <span class="muted-small">Alertes dans le tableau</span>
+                            </div>
+                        </div>
+
+                        <div class="bento-card" style="margin-bottom:20px;">
+                            <div class="card-top-row">
+                                <div>
+                                    <h3 class="card-title">Graphique des Scores par CV Analysé (Tous les dossiers)</h3>
+                                    <p class="muted-small">Chaque barre affiche le score exact et le nom du candidat, y compris à 0 %</p>
+                                </div>
+                                <span class="chip-blue" id="hr_perf_badge">Cohorte</span>
+                            </div>
+                            <div id="hr_performance_chart_box"></div>
+                        </div>
+                        <div class="bento-card" style="margin-bottom:20px;">
+                            <div class="card-top-row">
+                                <div class="segmented-pills" id="hr_score_pills">
+                                    <button type="button" class="seg-pill active" onclick="setHrQuickFilter('all', this)">Tous les CV</button>
+                                    <button type="button" class="seg-pill" onclick="setHrQuickFilter('max', this)">Élevé / Max</button>
+                                    <button type="button" class="seg-pill" onclick="setHrQuickFilter('mid', this)">Moyen</button>
+                                    <button type="button" class="seg-pill" onclick="setHrQuickFilter('low', this)">Petit / 0%</button>
+                                </div>
+                                <div class="segmented-pills" id="hr_read_pills">
+                                    <button type="button" class="seg-pill active" onclick="setHrReadFilter('all', this)">Lecture : Tous</button>
+                                    <button type="button" class="seg-pill" onclick="setHrReadFilter('clean', this)">100 % Lisibles</button>
+                                    <button type="button" class="seg-pill" onclick="setHrReadFilter('partial', this)">Partiels / Complexes</button>
+                                    <button type="button" class="seg-pill" onclick="setHrReadFilter('unreadable', this)">Illisibles (Image)</button>
+                                </div>
+                            </div>
+
+                            <div class="card-top-row" style="margin-top:10px;">
+                                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                                    <button type="button" class="pill-btn-ghost" id="btn_anon_mode" onclick="toggleAnonymousMode()">
+                                        <i class="ion-eye-disabled"></i> Anonymiser (RGPD)
+                                    </button>
+                                    <button type="button" class="pill-btn-ghost" id="btn_select_top_n" onclick="selectTopN()">Sélectionner Top 3</button>
+                                    <button type="button" class="pill-btn-ghost" onclick="toggleSelectAllHr()">Tout cocher</button>
+                                    <button type="button" class="pill-btn-primary" onclick="exportHrXlsx()">
+                                        <i class="ion-android-download"></i> Export Excel (.XLSX)
+                                    </button>
+                                    <button type="button" class="pill-btn-ghost" onclick="exportHrCampaignPdf()">
+                                        <i class="ion-document"></i> Rapport Campagne (.PDF)
+                                    </button>
+                                    <button type="button" class="pill-btn-ghost" onclick="openHrNewCandidateModal()">
+                                        <i class="ion-plus-round"></i> Ajouter sans PDF
+                                    </button>
+                                </div>
+
+                            </div>
+
+                            <div class="edit-grid" style="grid-template-columns: repeat(3, 1fr); margin-top:12px;">
+                                <div class="field-box">
+                                    <label>Rechercher (Nom, Ville, Compétence)</label>
+                                    <input type="text" id="hr_search_input" placeholder="Filtrer le tableau..." oninput="filterHrCards()">
+                                </div>
+                                <div class="field-box">
+                                    <label>Combobox Lien Calendrier RH</label>
+                                    <div style="display:flex; gap:6px;">
+                                        <select id="hr_calendar_combo" onchange="applySelectedCalendarLink()"></select>
+                                        <button type="button" class="pill-btn-ghost" title="Ajouter un lien calendrier" onclick="promptNewCalendarLink()">+</button>
+                                    </div>
+                                </div>
+                                <div class="field-box">
+                                    <label>Date / Lieu d'entretien</label>
+                                    <input type="text" id="hr_invite_datetime" placeholder="Ex: Jeudi 10h00 • Siège / Visio" oninput="renderHrMasterDetail()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bento-card" style="margin-bottom:20px; overflow-x:auto;">
+                            <div class="card-top-row">
+                                <h3 class="card-title">Tableau Complet des Candidatures Reçues</h3>
+                                <span class="muted-small">Cliquez sur la photo pour agrandir, "Voir PDF" pour lire ou "Corriger" pour éditer</span>
+                            </div>
+                            <table class="hr-data-table">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Photo</th>
+                                        <th>Nom complet</th>
+                                        <th>Expérience</th>
+                                        <th>Adresse</th>
+                                        <th>Contact</th>
+                                        <th>Lecture & Score</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="hr_table_body"></tbody>
+                            </table>
+                        </div>
+
+                        <div id="hr_selected_kpi_strip" class="bento-kpi-3" style="grid-template-columns: repeat(4, 1fr); margin-bottom:20px;"></div>
+                        <div class="hr-dark-workspace" style="margin-bottom:20px;">
+                            <div class="hr-dark-list" id="hr_dark_sidebar_list"></div>
+                            <div class="hr-dark-detail" id="hr_dark_detail_pane"></div>
+                        </div>
+
+                        <div id="hr_manual_editor_card" class="bento-card hidden" style="margin-bottom:20px; border:2px solid var(--royal);">
+                            <div class="card-top-row">
+                                <div>
+                                    <h3 class="card-title" id="hr_editor_title">Corriger / Compléter les informations du Candidat</h3>
+                                    <p class="muted-small">Saisissez les informations lues sur le PDF pour recalculer son score et synchroniser son profil.</p>
+                                </div>
+                                <div style="display:flex; gap:8px;">
+                                    <button type="button" class="pill-btn-ghost" id="btn_hr_lock_editor" onclick="toggleHrEditorLock()"><i class="ion-unlocked"></i> <span>Édition libre</span></button>
+                                    <button type="button" class="pill-btn-ghost" id="btn_hr_open_pdf_in_editor" onclick="openActiveCandidatePdf()"><i class="ion-document"></i> Ouvrir le CV PDF</button>
+                                    <button type="button" class="cal-nav-btn" onclick="closeHrManualEditor()"><i class="ion-close-round"></i></button>
+                                </div>
+                            </div>
+                            <div class="edit-grid" style="grid-template-columns: repeat(3, 1fr);">
+                                <div class="field-box"><label>Nom complet</label><input type="text" id="hr_ed_name" oninput="verifyHrFieldAgainstPdf('hr_ed_name','hr_verif_name')"><span id="hr_verif_name" class="verif-badge"></span></div>
+                                <div class="field-box"><label>Profession / Poste</label><input type="text" id="hr_ed_prof" oninput="verifyHrFieldAgainstPdf('hr_ed_prof','hr_verif_prof')"><span id="hr_verif_prof" class="verif-badge"></span></div>
+                                <div class="field-box"><label>Années d'expérience</label><input type="number" step="0.5" id="hr_ed_exp"></div>
+                                <div class="field-box"><label>Adresse / Province / Pays</label><input type="text" id="hr_ed_loc" placeholder="Ex: Haut-Katanga / RDC" oninput="verifyHrFieldAgainstPdf('hr_ed_loc','hr_verif_loc')"><span id="hr_verif_loc" class="verif-badge"></span></div>
+                                <div class="field-box"><label>Téléphone</label><input type="text" id="hr_ed_phone"></div>
+                                <div class="field-box"><label>E-mail</label><input type="email" id="hr_ed_email"></div>
+                                <div class="field-box"><label>Diplôme / Niveau d'études</label><input type="text" id="hr_ed_edu" oninput="verifyHrFieldAgainstPdf('hr_ed_edu','hr_verif_edu')"><span id="hr_verif_edu" class="verif-badge"></span></div>
+                                <div class="field-box"><label>Langues parlées</label><input type="text" id="hr_ed_langs" placeholder="Français, Anglais, Lingala" oninput="verifyHrCatSkills('hr_ed_langs','hr_verif_langs')"><span id="hr_verif_langs" class="verif-badge"></span></div>
+                                <div class="field-box"><label>Posture</label><select id="hr_ed_posture"><option value="Polyvalente">Polyvalente</option><option value="Analytique">Analytique</option><option value="Managériale">Managériale</option><option value="Opérationnelle">Opérationnelle</option></select></div>
+                            </div>
+
+                            <div class="soft-divider"><span>COMPÉTENCES SÉPARÉES PAR CATÉGORIE</span></div>
+
+                            <div class="edit-grid" style="grid-template-columns: repeat(2, 1fr);">
+                                <div class="field-box"><label>Langages de programmation</label><input type="text" id="hr_ed_cat_prog" placeholder="Ex: Python, SQL, JS" oninput="verifyHrCatSkills('hr_ed_cat_prog','hr_verif_prog')"><span id="hr_verif_prog" class="verif-badge"></span></div>
+                                <div class="field-box"><label>Logiciels & Outils informatiques</label><input type="text" id="hr_ed_cat_tools" placeholder="Ex: Excel, Power BI, Docker" oninput="verifyHrCatSkills('hr_ed_cat_tools','hr_verif_tools')"><span id="hr_verif_tools" class="verif-badge"></span></div>
+                                <div class="field-box"><label>Compétences métier / Santé / Gestion</label><input type="text" id="hr_ed_cat_domain" placeholder="Ex: Comptabilité, Soins, OHADA" oninput="verifyHrCatSkills('hr_ed_cat_domain','hr_verif_domain')"><span id="hr_verif_domain" class="verif-badge"></span></div>
+                                <div class="field-box"><label>Soft Skills & Attitudes</label><input type="text" id="hr_ed_cat_soft" placeholder="Ex: Leadership, Rigueur" oninput="verifyHrCatSkills('hr_ed_cat_soft','hr_verif_soft')"><span id="hr_verif_soft" class="verif-badge"></span></div>
+                            </div>
+
+                            <button type="button" class="btn-royal" style="margin-top:14px; width:100%;" onclick="saveHrManualCandidateEdit()">
+                                <i class="ion-checkmark-round"></i> Enregistrer & Recalculer le Score RH
+                            </button>
+                        </div>
+
+                        <div class="bento-grid-2">
+                            <div class="bento-card">
+                                <div class="card-top-row">
+                                    <h3 class="card-title">Carte Géographique & Trajets Candidats</h3>
+                                    <button type="button" class="chip-blue" style="border:none; cursor:pointer;" onclick="clearCityFilter()">Toutes les villes</button>
+                                </div>
+                                <div id="hr_leaflet_map" style="height:270px; border-radius:18px; border:1px solid var(--border); z-index:1;"></div>
+                                <div id="hr_geo_city_info" class="status-banner ok" style="margin-top:12px;">Cliquez sur un marqueur de ville sur la carte pour filtrer et voir le trajet / CO₂.</div>
+                            </div>
+
+                            <div class="bento-card">
+                                <div class="card-top-row">
+                                    <div>
+                                        <h3 class="card-title">Comparateur 360° (Side-by-Side)</h3>
+                                        <p class="muted-small">Cochez 2 candidats dans le tableau pour comparer</p>
+                                    </div>
+                                    <span class="chip-amber" id="duel_status_tag">0/2</span>
+                                </div>
+                                <div id="hr_duel_empty_state" class="muted-small" style="padding:20px; text-align:center;">Sélectionnez exactement 2 candidats pour afficher le Radar 5 axes et les barres comparatives.</div>
+                                <div id="hr_duel_active_content" class="hidden">
+                                    <div id="hr_duel_cards_pair" class="bento-grid-2" style="margin-bottom:12px;"></div>
+                                    <div id="hr_radar_svg_container" style="display:flex; justify-content:center;"></div>
+                                    <div id="hr_duel_bars_box"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+
+            <footer class="site-footer">
+                <a href="#"><p class="footer-copyRight">&copy; 2026 Glodi-claver. Tous les droits sont réservés, Les Informations exclusives.</p></a>
+            </footer>
+        </div>
+    </div>
+
+    <div id="hr_floating_action_bar" class="hr-floating-bar hidden">
+        <strong id="hr_selected_count_label">0 candidat(s) sélectionné(s)</strong>
+        <button type="button" class="pill-btn-primary" onclick="exportHrXlsx()"><i class="ion-android-download"></i> Exporter Shortlist (.XLSX)</button>
+    </div>
+
+    <nav class="mobile-bottom-pill">
+        <button type="button" class="mob-tab active" data-tab="tab-scan" onclick="switchTab('tab-scan')"><i class="ion-plus-round"></i></button>
+        <button type="button" class="mob-tab disabled" data-tab="tab-overview" onclick="switchTab('tab-overview')"><i class="ion-grid"></i></button>
+        <button type="button" class="mob-tab disabled" data-tab="tab-profile" onclick="switchTab('tab-profile')"><i class="ion-person"></i></button>
+        <button type="button" class="mob-tab disabled" data-tab="tab-interview" onclick="switchTab('tab-interview')"><i class="ion-chatboxes"></i></button>
+        <button type="button" class="mob-tab disabled" data-tab="tab-apply" onclick="switchTab('tab-apply')"><i class="ion-calendar"></i></button>
+        <button type="button" class="mob-tab" data-tab="tab-hr" onclick="switchTab('tab-hr')"><i class="ion-speakerphone"></i></button>
+    </nav>
+
+    <!-- MODALE PHOTO CANDIDAT EN GRAND -->
+    <div id="photo_zoom_modal" class="modal-backdrop hidden" onclick="closePhotoModal()">
+        <div class="modal-card" onclick="event.stopPropagation()" style="max-width:420px; text-align:center;">
+            <div class="card-top-row">
+                <strong id="photo_modal_title">Photo du Candidat</strong>
+                <button type="button" class="cal-nav-btn" onclick="closePhotoModal()"><i class="ion-close-round"></i></button>
+            </div>
+            <div id="photo_modal_body" style="padding:10px 0;"></div>
+        </div>
+    </div>
+
+    <!-- MODALE APERÇU PDF & SYNCHRONISATION MANUELLE -->
+    <div id="pdf_preview_modal" class="modal-backdrop hidden" onclick="closePdfModal()">
+        <div class="modal-card" onclick="event.stopPropagation()" style="max-width:960px; width:94vw;">
+            <div class="card-top-row">
+                <strong id="pdf_modal_title">Aperçu Document PDF</strong>
+                <button type="button" class="cal-nav-btn" onclick="closePdfModal()"><i class="ion-close-round"></i></button>
+            </div>
+            <iframe id="pdf_modal_iframe" style="width:100%; height:72vh; border:1px solid var(--border); border-radius:14px;"></iframe>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/geo-data.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/geomap.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/enhance.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/intel.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/mobile.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/insights.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/personal.js') }}"></script>
+</body>
+</html>
